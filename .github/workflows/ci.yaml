@@ -1,0 +1,86 @@
+---
+
+on:
+  pull_request:
+  push:
+    branches: master
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2.3.2
+      - name: Lint Code Base
+        uses: docker://ghcr.io/github/super-linter:latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    name: Testing
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: test
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2.3.2
+      - name: (Positive) Find all MD files and fail if not found
+        uses: ./
+        with:
+          wildcard: '*.md'
+      - name: (Positive) Find all MD files and fail if not found
+        uses: ./
+        with:
+          wildcard: '*.ts'
+          base_path: test/positive
+      - name: (Negative) Find all TS files and fail if found
+        continue-on-error: true
+        uses: ./
+        with:
+          wildcard: '*.js'
+          base_path: test/negative
+          exit_code_found: 1
+          exit_code_not_found: 0
+      - name: (Negative) Find all MD files and fail if found
+        continue-on-error: true
+        uses: ./
+        with:
+          wildcard: '*.md'
+          base_path: test/negative
+          exit_code_found: 1
+          exit_code_not_found: 0
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Changelog generation
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        id: changelog
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bump version and push tag
+        id: create_tag
+        uses: anothrNick/github-tag-action@1.17.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+      - name: Create Release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create_tag.outputs.new_tag }}
+          release_name: Release ${{ steps.create_tag.outputs.new_tag }}
+          body: |
+            ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false

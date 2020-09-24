@@ -1,0 +1,37 @@
+---
+
+name: 'File detection'
+author: 'DovnarAlexander'
+description: 'Find files\directories by typical find wildcard and exits with the required code.'
+inputs:
+  wildcard:
+    description: 'Find-like wildcard to find files\directories.'
+    required: true
+  type:
+    description: 'Type of find command. Supported values: f (file), d (directory), l (link), p (pipe), s (socket).'
+    default: f
+    required: false
+  exit_code_found:
+    description: 'Exit code for non-empty find result.'
+    default: 0
+    required: false
+  exit_code_not_found:
+    description: 'Exit code for empty find result.'
+    default: 1
+    required: false
+  base_path:
+    description: 'Base directory to find files in.'
+    default: ./
+    required: false
+outputs:
+  found:
+    description: 'Found items (files, directories etc.)'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.wildcard }}
+    - ${{ inputs.type }}
+    - ${{ inputs.exit_code_found }}
+    - ${{ inputs.exit_code_not_found }}
+    - ${{ inputs.base_path }}
