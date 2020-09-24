@@ -34,3 +34,4 @@ runs:
     - ${{ inputs.type }}
     - ${{ inputs.exit_code_found }}
     - ${{ inputs.exit_code_not_found }}
+    - ${{ inputs.base_path }}
