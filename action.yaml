@@ -2,8 +2,9 @@
 
 name: 'File detection'
 author: 'DovnarAlexander'
-icon: file-plus
-color: purple
+branding:
+  icon: file-plus
+  color: purple
 description: 'Find files\directories by typical find wildcard and exits with the required code.'
 inputs:
   wildcard:
